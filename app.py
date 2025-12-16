@@ -11,19 +11,6 @@ genai.configure(api_key=GOOGLE_API_KEY)
 gemini_pro = genai.GenerativeModel("gemini-2.0-flash")
 
 
-prompt = "こんにちは"
-response = gemini_pro.generate_content(prompt)
-print(response.text)
-
-
-
-try:
-    response = gemini_pro.generate_content(prompt)
-except Exception as e:
-    print(f"エラーが発生しました: {e}")
-
-
-
 
 
 app = Flask(__name__)

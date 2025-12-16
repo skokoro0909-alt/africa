@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Africa Energy & Population Explorer</title>
+
+  <!-- Leaflet 読み込み -->
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet/dist/leaflet.css"
+  />
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+  
+</head>
+<body>
+  <header class="header">
+    <h1>Africa Energy & Population Explorer</h1>
+    <p>Explore Africa's development indicators across decades</p>
+    <nav><a href="#first-block">Africa Energy Finder</a></nav>
+    
+      
+
+  <div class="main-container">
+    <!-- 左側のコントロールパネル -->
+    <div class="controls-panel">
+      <div class="box">
+        <h3>Data Layer</h3>
+        <select id="layer-select">
+          <option value="population">Population Density</option>
+          <option value="energy">Energy Access Rate</option>
+        </select>
+      </div>
+
+      <div class="box">
+        <h3>Year</h3>
+        <input
+          type="range"
+          id="year-slider"
+          min="1960"
+          max="2050"
+          value="2024"
+        />
+        <div id="year-display">2024</div>
+      </div>
+    </div>
+
+    <!-- 右側：地図表示エリア -->
+    <div id="map"></div>
+  </div>
+
+  <script>
+    // Leaflet 地図の初期化
+    const map = L.map("map").setView([0, 20], 3);
+
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      maxZoom: 6,
+    }).addTo(map);
+
+    const slider = document.getElementById("year-slider");
+    const yearDisplay = document.getElementById("year-display");
+    const layerSelect = document.getElementById("layer-select");
+
+    function updateMap(year, layerType) {
+      console.log("Update map → year:", year, "layer:", layerType);
+      // ここで後で /api/data から GeoJSON を取ってきて色を変える
+    }
+
+    slider.oninput = function () {
+      yearDisplay.textContent = this.value;
+      updateMap(this.value, layerSelect.value);
+    };
+
+    layerSelect.onchange = function () {
+      updateMap(slider.value, this.value);
+    };
+
+    // 初回表示
+    updateMap(2024, "population");
+  </script>
+</body>
+</html>

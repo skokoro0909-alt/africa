@@ -1,10 +1,106 @@
 <!DOCTYPE html>
-<html lang="ja">
- <head>
-   <meta charset="UTF-8">
-   <title>アフリカにおけるエネルギー格差</title>
- </head>
- <body>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Africa Energy & Population Explorer</title>
 
- </body>
+    <!-- Leaflet Map Library -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+
+<body>
+
+    <!-- Header Section -->
+    <header class="header">
+        <h1>Africa Energy & Population Explorer</h1>
+        <p>Explore Africa's development indicators across decades</p>
+    </header>
+
+    <!-- Main Container -->
+    <div class="main-container">
+
+        <!-- Left Panel (Controls) -->
+        <div class="controls-panel">
+
+            <!-- Layer Selector -->
+            <div class="box">
+                <h3>Data Layer</h3>
+                <select id="layer-select">
+                    <option value="population">Population Density</option>
+                    <option value="energy">Energy Access Rate</option>
+                </select>
+            </div>
+
+            <!-- Year Slider -->
+            <div class="box">
+                <h3>Year</h3>
+                <input type="range" id="year-slider" min="1960" max="2050" value="2024">
+                <div id="year-display">2024</div>
+            </div>
+
+        </div>
+
+        <!-- Map Area -->
+        <div id="map"></div>
+
+    </div>
+
+    <!-- JavaScript -->
+    <script>
+
+        /* Initialize Map */
+        var map = L.map('map').setView([0, 20], 3);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 6,
+        }).addTo(map);
+
+        /* Placeholder GeoJSON Layer (Will Update Later) */
+        var dataLayer;
+
+        function updateMap(year, layerType) {
+            console.log("Updating map → Year:", year, "Layer:", layerType);
+
+            // Flask APIからデータを取得する例
+            fetch(`/api/data?year=${year}&layer=${layerType}`)
+                .then(res => res.json())
+                .then(geojson => {
+                    if (dataLayer) map.removeLayer(dataLayer);
+
+                    dataLayer = L.geoJSON(geojson, {
+                        style: feature => ({
+                            fillColor: feature.properties.color,
+                            weight: 1,
+                            color: "#333",
+                            fillOpacity: 0.85
+                        })
+                    }).addTo(map);
+                });
+        }
+
+        /* Slider event */
+        const slider = document.getElementById("year-slider");
+        const display = document.getElementById("year-display");
+        const layerSelect = document.getElementById("layer-select");
+
+        slider.oninput = function () {
+            display.innerText = this.value;
+            updateMap(this.value, layerSelect.value);
+        };
+
+        layerSelect.onchange = function () {
+            updateMap(slider.value, this.value);
+        };
+
+        // 初回ロード
+        updateMap(2024, "population");
+
+    </script>
+
+</body>
 </html>

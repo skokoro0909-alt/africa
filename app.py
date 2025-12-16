@@ -8,7 +8,7 @@ load_dotenv()
 GOOGLE_API_KEY = os.getenv('GOOGLE_API_KEY')
 genai.configure(api_key=GOOGLE_API_KEY)
 
-gemini_pro = genai.GenerativeModel("gemini-pro")
+gemini_pro = genai.GenerativeModel("gemini-2.0-flash")
 
 
 prompt = "こんにちは"
@@ -25,7 +25,6 @@ except Exception as e:
 
 
 
-from flask import Flask, request, jsonify
 
 app = Flask(__name__)
 

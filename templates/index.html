@@ -1,23 +1,24 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
+   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Africa Energy & Population Explorer</title>
 
-  <!-- Leaflet 読み込み -->
-  <link
-    rel="stylesheet"
-    href="https://unpkg.com/leaflet/dist/leaflet.css"
-  />
-  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <!-- あなたのCSS（Flaskのstaticフォルダから読み込む） -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 
-  
+  <!-- Leaflet 読み込み -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 </head>
 <body>
   <header class="header">
     <h1>Africa Energy & Population Explorer</h1>
     <p>Explore Africa's development indicators across decades</p>
-    <nav><a href="/project">Africa Energy Finder</a></nav>
+    <nav><a href="/projects" class="energy-finder-btn">
+           Africa Energy Research Portal →
+        </a></nav>
     
       
 

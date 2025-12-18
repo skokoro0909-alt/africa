@@ -1,5 +1,5 @@
 import time
-import re
+import requests
 import json
 import google.generativeai as genai
 # --- 内部用：一番いいモデル（シェフ）を選ぶ関数 ---

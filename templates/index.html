@@ -13,7 +13,7 @@
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 </head>
 <body>
-  <header class="header">
+  <header class="header"></header>
     <h1>Africa Energy & Population Explorer</h1>
     <p>Explore Africa's development indicators across decades</p>
     <nav><a href="/projects" class="energy-finder-btn">
@@ -50,69 +50,78 @@
     <div id="map"></div>
   </div>
 
-  <script>
-   /* --- index.html の中にある updateMap 関数をこれに差し替えてください --- */
+    <script>
+        // 1. 地図の土台を作る
+        const map = L.map("map").setView([0, 20], 3);
+        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        maxZoom: 6,
+        }).addTo(map);
 
-// 地図の上に重ねる「色の層」を保存しておく変数（入れ物）です
-let geoJsonLayer;
+        const slider = document.getElementById("year-slider");
+        const yearDisplay = document.getElementById("year-display");
+        const layerSelect = document.getElementById("layer-select");
 
-async function updateMap(year, layerType) {
-    console.log("注文を受けました！ 年:", year, " 種類:", layerType);
+        let geoJsonLayer; // 色を塗った地図を保存する入れ物
 
-    try {
-        // 1. Pythonの窓口 (app.py) から数値データを取ってきます
-        const response = await fetch(`/api/stats?year=${year}&layer=${layerType}`);
-        const statsData = await response.json();
-        console.log("届いた数値データ:", statsData);
-
-        // 2. 地図の「形（境界線）」のデータを取ってきます
-        const geoResponse = await fetch('https://raw.githubusercontent.com/datasets/geo-boundaries-world-110m/master/countries.geojson');
-        const geoData = await geoResponse.json();
-
-        // 3. もし古い地図がすでに表示されていたら、一度消します（重ならないように）
-        if (geoJsonLayer) {
-            map.removeLayer(geoJsonLayer);
+        // 数値によって色を変える関数
+        function getColor(d, type) {
+            if (type === 'population') {
+                return d > 100 ? '#800026' : d > 50 ? '#BD0026' : d > 20 ? '#E31A1C' : '#FFEDA0';
+            } else {
+                return d > 80 ? '#006837' : d > 40 ? '#78c679' : '#ffffcc';
+            }
         }
 
-        // 4. 新しい色を塗った地図を作成します
-        geoJsonLayer = L.geoJson(geoData, {
-            style: function(feature) {
-                // 地図データの国名を取得
-                let countryName = feature.properties.name;
-                
-                // Pythonから届いたデータの中から、その国の数値を探します
-                // もし名前が微妙に違うときのために、ここを今後調整する必要があります
-                let val = statsData[countryName] || 0; 
+        // 地図を更新するメインの命令
+        async function updateMap(year, layerType) {
+        try {
+            // app.py の窓口 (/api/stats) から数値データを取ってくる
+            const response = await fetch(`/api/stats?year=${year}&layer=${layerType}`);
+            const statsData = await response.json();
 
+            // アフリカの「形」のデータを取ってくる
+            const geoResponse = await fetch('https://raw.githubusercontent.com/johan/world.geo.json/master/countries.geo.json');
+            const geoData = await geoResponse.json();
+
+            if (geoJsonLayer) { map.removeLayer(geoJsonLayer); }
+
+            geoJsonLayer = L.geoJson(geoData, {
+            style: function(feature) {
+                const countryName = feature.properties.name;
+                const val = statsData[countryName] || 0; // Pythonから届いたデータを使う
                 return {
-                    fillColor: getColor(val, layerType), // 下にある getColor 関数で色を決めます
-                    weight: 1,
-                    opacity: 1,
-                    color: 'white', // 境界線の色
-                    fillOpacity: 0.7 // 透明度
+                fillColor: getColor(val, layerType),
+                weight: 1, color: 'white', fillOpacity: 0.7
                 };
             },
             onEachFeature: function(feature, layer) {
-                // 国をクリックしたときに名前と数値を表示する設定
-                let name = feature.properties.name;
-                let val = statsData[name] || "データなし";
+                const name = feature.properties.name;
+                const val = statsData[name] || "データなし";
                 layer.bindPopup(name + ": " + val);
+            },
+            // アフリカの国だけを表示
+            filter: function(feature) {
+                const africaList = ["Angola", "Benin", "Botswana", "Burkina Faso", "Cameroon", "Central African Republic", "Chad", "Congo", "Democratic Republic of the Congo", "Djibouti", "Egypt", "Equatorial Guinea", "Eritrea", "Ethiopia", "Gabon", "Gambia", "Ghana", "Guinea", "Guinea-Bissau", "Ivory Coast", "Kenya", "Lesotho", "Liberia", "Libya", "Madagascar", "Malawi", "Mali", "Mauritania", "Mauritius", "Morocco", "Mozambique", "Namibia", "Niger", "Nigeria", "Rwanda", "Senegal", "Sierra Leone", "Somalia", "South Africa", "South Sudan", "Sudan", "Swaziland", "Tanzania", "Togo", "Tunisia", "Uganda", "Zambia", "Zimbabwe"];
+                return africaList.includes(feature.properties.name);
             }
-        }).addTo(map); // 地図に表示！
+            }).addTo(map);
 
-    } catch (error) {
-        console.error("エラーが起きました:", error);
-    }
-}
+        } catch (error) {
+            console.error("エラー:", error);
+        }
+        }
 
-// 数値に応じて色を決める「色鉛筆」のような関数
-function getColor(d, type) {
-    if (type === 'population') {
-        return d > 200 ? '#800026' : d > 100 ? '#BD0026' : d > 50 ? '#E31A1C' : '#FFEDA0';
-    } else {
-        return d > 80 ? '#006837' : d > 40 ? '#78c679' : '#ffffcc';
-    }
-}
-  </script>
+        slider.oninput = function () {
+        yearDisplay.textContent = this.value;
+        updateMap(this.value, layerSelect.value);
+        };
+
+        layerSelect.onchange = function () {
+        updateMap(slider.value, this.value);
+        };
+
+        // 最初に一度実行
+        updateMap(2024, "population");
+    </script>
 </body>
 </html>

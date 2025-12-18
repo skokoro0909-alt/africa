@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <title>Africa Energy & Population Explorer</title>
+
+  <!-- Leaflet 読み込み -->
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet/dist/leaflet.css"
+  />
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+</head>
+
+<body>
+  <h1>Africa Energy Finder</h1>
+
+  <!-- 検索フォーム -->
+  <div>
+    <form method="GET" action="/projects">
+      <div>
+        <label>Keyword</label><br>
+        <input
+          type="text"
+          name="q"
+          value="{{ q or '' }}"
+          placeholder="Search projects, donors, papers..."
+          style="width: 420px;"
+        />
+        <button type="submit">Search</button>
+      </div>
+
+      <div style="margin-top: 10px;">
+        <label>Country</label><br>
+        <input
+          type="text"
+          name="country"
+          value="{{ country or '' }}"
+          placeholder="e.g., Kenya, Nigeria"
+        />
+      </div>
+
+      <div style="margin-top: 10px;">
+        <label>Year</label><br>
+        <input
+          type="number"
+          name="year"
+          value="{{ year or '' }}"
+          placeholder="e.g., 2021"
+          min="1900"
+          max="2100"
+        />
+      </div>
+
+      <div style="margin-top: 10px;">
+        <label>Author</label><br>
+        <input
+          type="text"
+          name="author"
+          value="{{ author or '' }}"
+          placeholder="e.g., Smith"
+        />
+      </div>
+    </form>
+  </div>
+
+  <!-- 検索結果 -->
+  {% if results %}
+    <h2>検索結果（{{ results|length }}件）</h2>
+    {% for item in results %}
+      <div style="margin: 14px 0; padding: 10px; border: 1px solid #ccc;">
+        <div><strong>タイトル：</strong>{{ item.title }}</div>
+        <div><strong>年：</strong>{{ item.year }}</div>
+        <div><strong>著者：</strong>{{ item.author }}</div>
+        <div><strong>国：</strong>{{ item.country }}</div>
+        <div><strong>出版元：</strong>{{ item.publisher }}</div>
+      </div>
+    {% endfor %}
+  {% elif searched %}
+    <h2>検索結果：0件</h2>
+    <div>条件に一致するデータがありません。</div>
+  {% endif %}
+</body>
+</html>

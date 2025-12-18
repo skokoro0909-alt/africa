@@ -51,33 +51,68 @@
   </div>
 
   <script>
-    // Leaflet 地図の初期化
-    const map = L.map("map").setView([0, 20], 3);
+   /* --- index.html の中にある updateMap 関数をこれに差し替えてください --- */
 
-    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-      maxZoom: 6,
-    }).addTo(map);
+// 地図の上に重ねる「色の層」を保存しておく変数（入れ物）です
+let geoJsonLayer;
 
-    const slider = document.getElementById("year-slider");
-    const yearDisplay = document.getElementById("year-display");
-    const layerSelect = document.getElementById("layer-select");
+async function updateMap(year, layerType) {
+    console.log("注文を受けました！ 年:", year, " 種類:", layerType);
 
-    function updateMap(year, layerType) {
-      console.log("Update map → year:", year, "layer:", layerType);
-      // ここで後で /api/data から GeoJSON を取ってきて色を変える
+    try {
+        // 1. Pythonの窓口 (app.py) から数値データを取ってきます
+        const response = await fetch(`/api/stats?year=${year}&layer=${layerType}`);
+        const statsData = await response.json();
+        console.log("届いた数値データ:", statsData);
+
+        // 2. 地図の「形（境界線）」のデータを取ってきます
+        const geoResponse = await fetch('https://raw.githubusercontent.com/datasets/geo-boundaries-world-110m/master/countries.geojson');
+        const geoData = await geoResponse.json();
+
+        // 3. もし古い地図がすでに表示されていたら、一度消します（重ならないように）
+        if (geoJsonLayer) {
+            map.removeLayer(geoJsonLayer);
+        }
+
+        // 4. 新しい色を塗った地図を作成します
+        geoJsonLayer = L.geoJson(geoData, {
+            style: function(feature) {
+                // 地図データの国名を取得
+                let countryName = feature.properties.name;
+                
+                // Pythonから届いたデータの中から、その国の数値を探します
+                // もし名前が微妙に違うときのために、ここを今後調整する必要があります
+                let val = statsData[countryName] || 0; 
+
+                return {
+                    fillColor: getColor(val, layerType), // 下にある getColor 関数で色を決めます
+                    weight: 1,
+                    opacity: 1,
+                    color: 'white', // 境界線の色
+                    fillOpacity: 0.7 // 透明度
+                };
+            },
+            onEachFeature: function(feature, layer) {
+                // 国をクリックしたときに名前と数値を表示する設定
+                let name = feature.properties.name;
+                let val = statsData[name] || "データなし";
+                layer.bindPopup(name + ": " + val);
+            }
+        }).addTo(map); // 地図に表示！
+
+    } catch (error) {
+        console.error("エラーが起きました:", error);
     }
+}
 
-    slider.oninput = function () {
-      yearDisplay.textContent = this.value;
-      updateMap(this.value, layerSelect.value);
-    };
-
-    layerSelect.onchange = function () {
-      updateMap(slider.value, this.value);
-    };
-
-    // 初回表示
-    updateMap(2024, "population");
+// 数値に応じて色を決める「色鉛筆」のような関数
+function getColor(d, type) {
+    if (type === 'population') {
+        return d > 200 ? '#800026' : d > 100 ? '#BD0026' : d > 50 ? '#E31A1C' : '#FFEDA0';
+    } else {
+        return d > 80 ? '#006837' : d > 40 ? '#78c679' : '#ffffcc';
+    }
+}
   </script>
 </body>
 </html>

@@ -3,6 +3,7 @@ from dotenv import load_dotenv
 import google.generativeai as genai
 from flask import Flask, request, jsonify, render_template
 from project import search_literature_function 
+import model 
 
 load_dotenv()
 GOOGLE_API_KEY = os.getenv('GOOGLE_API_KEY')
@@ -24,6 +25,30 @@ DATA = [
 # 文字が含まれているかチェックする便利な道具
 def contains(haystack: str, needle: str) -> bool:
     return needle.lower() in haystack.lower()
+
+@app.route('/api/stats')
+def get_stats():
+    # 地図（JavaScript）から送られてきた「年」と「種類」を受け取ります
+    year = request.args.get('year', type=int)
+    layer = request.args.get('layer') # 'population' か 'energy'
+
+    # model.py の中のデータ（掃除済みのデータ）を使います
+    if layer == 'population':
+        df = model.df_pop_clean
+    else:
+        df = model.df_elec_clean
+
+    # 指定された「年」のデータだけを抜き出します
+    target_data = df[df['ds'].dt.year == year]
+
+    # { "国名": 数値 } という形の辞書（リストのようなもの）を作ります
+    result_data = {}
+    for _, row in target_data.iterrows():
+        result_data[row['Country Name']] = row['y']
+
+    # JavaScriptが読める形式（JSON）にして返信します
+    return jsonify(result_data)
+
 
 # --- 1. トップページ（お家の玄関） ---
 @app.route('/') 

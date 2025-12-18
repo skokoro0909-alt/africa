@@ -17,37 +17,50 @@
 
   <!-- 検索フォーム -->
   <div>
-    <form method="GET" action="/projects">
-      <div>
-        <label>Keyword</label><br>
-        <input
-          type="text"
-          name="q"
-          value="{{ q or '' }}"
-          placeholder="Search projects, donors, papers..."
-          style="width: 420px;"
-        />
-        <button type="submit">Search</button>
-      </div>
-      </div>
+    <form action="/project" method="post"> 
+        <input type="text" name="keyword" placeholder="キーワードを入力"> 
+        <button type="submit">Search</button> 
     </form>
+
   </div>
 
   <!-- 検索結果 -->
-  {% if results %}
-    <h2>検索結果（{{ results|length }}件）</h2>
-    {% for item in results %}
-      <div style="margin: 14px 0; padding: 10px; border: 1px solid #ccc;">
-        <div><strong>タイトル：</strong>{{ item.title }}</div>
-        <div><strong>年：</strong>{{ item.year }}</div>
-        <div><strong>著者：</strong>{{ item.author }}</div>
-        <div><strong>国：</strong>{{ item.country }}</div>
-        <div><strong>出版元：</strong>{{ item.publisher }}</div>
-      </div>
-    {% endfor %}
-  {% elif searched %}
-    <h2>検索結果：0件</h2>
-    <div>条件に一致するデータがありません。</div>
-  {% endif %}
+  <h2>Result</h2>
+
+    <div class="results">
+            {% if results %}
+                <p>{{ results|length }} 件の文献が見つかりました。</p>
+                
+                {% for item in results %}
+                <div class="result-card">
+                    <h2><a href="{{ item.source_url }}" target="_blank">{{ item.title }}</a></h2>
+                    
+                    <div class="meta-info">
+                        著者: {{ item.author }} | 発行: {{ item.year }}
+                    </div>
+
+                    <div class="summary">
+                        <strong>【要約】</strong><br>
+                        {{ item.summary }}
+                    </div>
+
+                    <div class="tags">
+                        <span class="tag">📍 {{ item.tags.country }}</span>
+                        <span class="tag">⚡ {{ item.tags.energy_type }}</span>
+                        <span class="tag">🏷️ {{ item.tags.topic }}</span>
+                    </div>
+                </div>
+                {% endfor %}
+            
+            {% else %}
+                <p>該当する文献が見つかりませんでした。</p>
+            {% endif %}
+            {% if error_message %}
+                <p style="color: red;">{{ error_message }}</p>
+            {% endif %}
+    </div>
+    
+
+    
 </body>
 </html>
